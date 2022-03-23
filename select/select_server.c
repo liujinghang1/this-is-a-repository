@@ -8,7 +8,7 @@ int main()
 {
 
     int lfd = socket(AF_INET, SOCK_STREAM, 0);
-    if(fd == -1){
+    if(lfd == -1){
         perror("socket");
         exit(0);
     }
@@ -21,7 +21,7 @@ int main()
 
     listen(lfd,128);
 
-    int maxfd = lfd
+    int maxfd = lfd;
     fd_set rdset;
     fd_set rdtemp;
 
@@ -36,17 +36,21 @@ int main()
         if(FD_ISSET(lfd,&rdtemp)){
             
             struct sockaddr_in cliaddr;
-            int clien = sizeof(cliaddr);
+            int clilen = sizeof(cliaddr);
             int cfd = accept(lfd, (struct sockaddr*)&cliaddr, &clilen);
 
             FD_SET(cfd, &rdset);
-            max_fd = cfd > maxfd ? cfd : maxfd;
-            
+            char ip[24] = {0};
+           printf("the add of client:%s, port:%d\n",
+           inet_ntop(AF_INET, &cliaddr.sin_addr.s_addr, ip, sizeof(ip)),
+           ntohs(cliaddr.sin_port));
+            maxfd = cfd > maxfd ? cfd : maxfd;
+        }
             int i;
             for( i = 0; i<maxfd+1;++i){
                 if(i != lfd && FD_ISSET(i, &rdtemp)){
                     
-                    char buf[10] = {0};
+                    char buf[1000] = {0};
 
                     int len = read(i, buf, sizeof(buf));
                     if(len == 0){
@@ -56,7 +60,12 @@ int main()
                         close(i);
                     }
                     else if(len > 0){
-
+					printf("read buf = %s\n", buf);
+					int i;
+					for( i = 0;i<len;++i){
+						buf[i] = toupper(buf[i]);
+						}
+					printf("after buf = %s\n", buf);
                         write(i, buf, strlen(buf)+1);
                     }
                     else{
@@ -65,7 +74,7 @@ int main()
                 }
             }
         }
-    }
+    
                 return 0;
 }
 
